@@ -1,15 +1,17 @@
-let readyList = []
+class Status {
+    readyList = []
 
-const addProcessToReadyList = (process) => {
-    readyList.push(process)
+    addProcessToReadyList = (process) => {
+        this.readyList.push(process)
+    }
+
+    removeProcessFromReadyList = (indice) => {
+        this.readyList.splice(indice, 1)
+    }
 }
 
-const removeProcessFromReadyList = (indice) => {
-    readyList.splice(indice, 1)
-}
+const pseudoKernelStatus = new Status()
 
-export {
-    addProcessToReadyList,
-    removeProcessFromReadyList,
-}
+export { pseudoKernelStatus }
+
 

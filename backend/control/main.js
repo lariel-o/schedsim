@@ -5,8 +5,11 @@ class Status {
 
     tickerPointer
 
-    // Ready list save the processes that are able to be send to execution
+    // Ready list save processes that are able to be send to execution
     readyList = []
+
+    // Scheduled list save process that are waiting to go to CPU
+    scheduledList = []
 
     constructor(unitOfTime) {
         if(!unitOfTime)
@@ -21,6 +24,17 @@ class Status {
     // Remove the process at the given indice from ready list
     removeProcessFromReadyList(indice) { this.readyList.splice(indice, 1) }
 
+    scheduleProcess(process) { this.scheduledList.push(process) }
+
+    checkScheduleList() {
+        for(let i in this.scheduledList) {
+            if(this.scheduledList[i].startsAt == this.currentTime) {
+                const process = this.scheduledList.splice(i, 1)
+                this.addProcessToReadyList(process)
+            }
+        }
+    }
+
     // Start the simulator
     startSimulator(factor = 1) {
         // Stop the last Ticker if it exists
@@ -28,6 +42,10 @@ class Status {
 
         // Start the new ticker
         this.tickerPointer = setInterval(()=>{
+            // Check if have any scheduled process to be added in ready list
+            this.checkScheduleList()
+
+            // Increments currentTime by 1
             this.currentTime++
         }, this.unitOfTime / factor)
     }

@@ -4,6 +4,8 @@ let lastPID = 0
 // Notice that the lastPID is a counter that increments each time a new
 // process is build
 class Process {
+    timeAtCPU = 0
+
     constructor(startsAt, finishAfter, deadlineAfter, priority) {
         this.PID            = lastPID
         this.startsAt       = startsAt

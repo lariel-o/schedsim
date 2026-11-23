@@ -17,6 +17,9 @@ class Status {
     // Scheduled list save process that are waiting to go to CPU
     scheduledList = []
 
+    logs        = []
+    currentLog  = null
+
 
     tickerPointer
 
@@ -27,6 +30,24 @@ class Status {
         else
             this.unitOfTime = unitOfTime
     }
+
+    // ================= Methods that deal with logs
+    // Put currentLog in logs list
+    addCurrentLogToLogList() {
+        logs.push(this.currentLog)
+
+        this.currentLog = null
+    }
+
+    // Add a new line to currentLog
+    addNewLogLine(label, msg) {
+        if(length(this.logs) != 0)
+            this.currentLog + "\n"
+
+        this.currentLog += `[${label}]\n`
+        this.currentLog += msg
+    }
+
 
     // ================= Methods that deal with process
     
@@ -50,20 +71,41 @@ class Status {
 
     // Check if have any process in scheduled list to be added in ready list. If have, do it
     checkScheduleList() {
+        this.addNewLogLine("CHECKING IF THERE IS ANY PROCESS WATING TO JOIN READY LIST", 
+            "> start looking at scheduled list")
         for(let i in this.scheduledList) {
+            this.addNewLogLine("CHECKING IF THERE IS ANY PROCESS WATING TO JOIN READY LIST", 
+                `> looking at the process with PID ${this.scheduledList[i].PID}`)
+
             if(this.scheduledList[i].startsAt == this.currentTime) {
+            this.addNewLogLine("CHECKING IF THERE IS ANY PROCESS WATING TO JOIN READY LIST", 
+                `> ${this.scheduledList[i].PID} want to join! Adding process with PID ${this.scheduledList[i].PID} to readyList`)
                 const process = this.scheduledList.splice(i, 1)[0]
                 this.addProcessToReadyList(process)
             }
         }
     }
 
+    // Check if a runningProcess have timedout
     checkRunningProcess() {
-        if(!this.runningProcess)
+        if(!this.runningProcess) {
+            this.addNewLogLine("CHECKING IF PROCESS HAVE TIMEDOUT", "> THERE ISN'T ANY RUNNING PROCESS")
             return
+        } 
 
-        if(this.runningProcess.timeAtCPU == this.runningProcess.finishAfter)
+        this.addNewLogLine("CHECKING IF PROCESS HAVE TIMEDOUT",
+        `> PROCESS ${this.runningProcess.PID} with ${this.runningProcess} times at CPU, it need a total of ${this.runningProcess.finishAfter} times to finish!`)
+
+        if(this.runningProcess.timeAtCPU == this.runningProcess.finishAfter) {
+            this.addNewLogLine("CHECKING IF PROCESS HAVE TIMEDOUT",
+            `> process finished its execution, leaving cpu`)
+
             this.runningProcess = null
+            return
+        }
+
+        this.addNewLogLine("CHECKING IF PROCESS HAVE TIMEDOUT",
+        `> process still executing, leave it alone`)
     }
 
     chooseProcess = (indice) => {
@@ -86,6 +128,7 @@ class Status {
 
         // Start the new ticker
         this.tickerPointer = setInterval(()=>{
+            this.addNewLogLine("STARTING TICK", `current at ${this.currentTime}`)
             // ========================== Start section
             // Check if a running process have timedout
             this.checkRunningProcess()
@@ -100,12 +143,21 @@ class Status {
             })
 
 
+            this.addNewLogLine("EXECUTING PROCESS", 
+                `> process ${this.runningProcess} is executing now!`)
 
+
+            this.addNewLogLine("FINISHING TICK", 
+                `current at ${this.currentTime}`)
             // ========================== Final section
             // Increments currentTime by 1
+            this.addNewLogLine("FINISHING TICK", 
+                `> updating uptime by one, before: ${this.currentTime}, now: ${this.currentTime + 1}`)
             this.currentTime++
 
             // If exists a process running now, increments timeAtCPU by 1
+            this.addNewLogLine("FINISHING TICK", 
+                `> updating current process executing time by one, before: ${this.runningProcess.timeAtCPU}, now: ${this.runningProcess.timeAtCPU + 1} \n`)
             if(this.runningProcess) {
                 this.runningProcess.timeAtCPU++
             }

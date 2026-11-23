@@ -73,7 +73,9 @@ class Status {
         if(currentRunningProcess)
             this.addProcessToReadyList(currentRunningProcess)
 
-        this.runningProcess = sendToRunningProcess
+        this.sendToRunningProcess = null
+        if(sendToRunningProcess)
+            this.runningProcess = sendToRunningProcess
     }
     // ================= Methods that deal with simulator execution
 

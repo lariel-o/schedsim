@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
-    <title>Document</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="./frontend/main.css">
+    <title>Schedsim</title>
+    <link rel="stylesheet" href="frontend/style.css">
 </head>
 <body>
+<<<<<<< HEAD
     <script type="module">
         import { pseudoKernelStatus } from './backend/control/main.js'
         import { Process } from './backend/process/main.js'
@@ -17,5 +17,43 @@
         pseudoKernelStatus.scheduleProcess(new Process(3, 2, null, null))
         pseudoKernelStatus.scheduleProcess(new Process(6, 10, null, null))
     </script>
+=======
+    <div class="container">
+        <div class="screen active" id="start-screen">
+            <h1>Schedsim</h1>
+            <p>Este é um simulador de escalonador de processos.</p>
+            <button id="start-btn">Começar</button>
+        </div>
+        
+        <div class="screen" id="params-screen">
+            <div class="params-header">
+                <h2 id="params-text">Parâmetro</h2>
+            </div>
+
+            <div id="params-container" class="params-container">
+                <h3>N° de processos</h3>
+                <input type="text">
+                <h3>Escalonador</h3>
+                <select name="select">
+                    <option value="valor1" selected>FIFO</option>
+                    <option value="valor2">Earliest Job First</option>
+                    <option value="valor3">Round Robin</option>
+                    <option value="valor4">Earliest Deadline First</option>
+                </select>
+            </div>
+
+            <button id="params-btn">Continuar</button>
+        </div>
+
+        <div id="processo-screen" class="screen">
+            <div class="process-header">
+                <h2 id="process-text">Processo <span id="num-process">1</span></h2>
+            </div>
+            
+            <button id="process-btn">Continuar</button>
+        </div>
+    </div>
+    <script src="frontend/script.js"></script>
+>>>>>>> b980c0f (Páginas iniciais)
 </body>
 </html>

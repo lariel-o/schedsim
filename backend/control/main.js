@@ -8,7 +8,7 @@ class Status {
     runningProcess      = null
 
     // Fifo is the default algorithm in the simulator.
-    avaiableAlgorithms     = avaiableAlgorithms
+    avaiableAlgorithms      = avaiableAlgorithms
     algorithm               = this.avaiableAlgorithms["FIFO"]
 
     // Ready list save processes that are able to be send to execution
@@ -106,8 +106,7 @@ class Status {
             msg: "looking for a process waiting to join readyList"
         })
 
-        let found = false
-        for(let i in this.scheduledList) {
+        for(let i = 0; i < this.scheduledList.length; i++) {
             const seeing = this.scheduledList[i]
             if(seeing.startsAt == this.currentTime) {
                 this.addNewLogLine({
@@ -122,7 +121,7 @@ class Status {
 
                 const process = this.scheduledList.splice(i, 1)[0]
                 this.addProcessToReadyList(process)
-                found = true
+                i--
 
                 this.addNewLogLine({
                     blockName: "LOOKING INTO SCHEDULE LIST",
@@ -192,13 +191,13 @@ class Status {
                 blockName: "EXECUTING SCHEDULE ALGORITHM",
                 msg: "starting now"
             })
+
             const algorithmMsgLog = this.algorithm({
                 readyList: this.readyList,
                 runningProcess: this.runningProcess,
                 chooseProcess: this.chooseProcess
             })
             this.appendLogMsg("EXECUTING SCHEDULE ALGORITHM", algorithmMsgLog)
-            
 
 
             // ========================== Final section

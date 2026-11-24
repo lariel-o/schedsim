@@ -17,15 +17,62 @@ class Status {
     // Scheduled list save process that are waiting to go to CPU
     scheduledList = []
 
+    logs                = []
+    currentLog          = []
 
     tickerPointer
-
 
     constructor(unitOfTime) {
         if(!unitOfTime)
             this.unitOfTime = 1000
         else
             this.unitOfTime = unitOfTime
+    }
+
+    // ================= Methods that deal with logs
+    // Put currentLog in logs list
+    addCurrentLogToLogList() {
+        this.logs.push(this.currentLog)
+
+        this.currentLog = []
+    }
+
+    // Add a new line to currentLog
+    addNewLogLine(obj) {
+        let found = false
+        for(let i in this.currentLog) {
+            if(this.currentLog[i][0] == obj.blockName) {
+                found = true
+                this.currentLog[i].push(obj.msg)
+                break;
+            }
+        }
+
+        if(!found) {
+            this.currentLog.push([obj.blockName])
+            this.currentLog[this.currentLog.length - 1].push(obj.msg)
+        }
+    }
+
+    appendLogMsg(blockName, msgArray) {
+        for(let i in this.currentLog) {
+            if(this.currentLog[i][0] == blockName) {
+                this.currentLog[i] = this.currentLog[i].concat(msgArray)
+                break;
+            }
+        }
+    }
+
+    addNewLogBlockName(name) {
+        // search if the block already exists
+        for(let i in this.currentLog) {
+            if(this.currentLog[i][0] == name) {
+                return
+            }
+        }
+
+        // If not found, add the blockName
+        this.currentLog.push([name])
     }
 
     // ================= Methods that deal with process
@@ -35,7 +82,11 @@ class Status {
 
     changeAlgorithm(algorithmName) {
         if(!avaiableAlgorithms[algorithmName]) {
-            console.log(`Error, algorithm with name ${algorithmName} does not exists. Aborting`)
+            this.addNewLogLine({
+                blockName: "ERROR CHOOSING ALGORITHM!!!!!!",
+                msg: "Provided name doesen't exists"
+            })
+
             return
         }
         
@@ -50,20 +101,64 @@ class Status {
 
     // Check if have any process in scheduled list to be added in ready list. If have, do it
     checkScheduleList() {
+        this.addNewLogLine({
+            blockName: "LOOKING INTO SCHEDULE LIST",
+            msg: "looking for a process waiting to join readyList"
+        })
+
+        let found = false
         for(let i in this.scheduledList) {
-            if(this.scheduledList[i].startsAt == this.currentTime) {
+            const seeing = this.scheduledList[i]
+            if(seeing.startsAt == this.currentTime) {
+                this.addNewLogLine({
+                    blockName: "LOOKING INTO SCHEDULE LIST",
+                    msg: `FOUND! Process with PID ${seeing.PID} wants to join ready list`
+                })
+
+                this.addNewLogLine({
+                    blockName: "LOOKING INTO SCHEDULE LIST",
+                    msg: `Adding process with PID ${seeing.PID} to ready list`
+                })
+
                 const process = this.scheduledList.splice(i, 1)[0]
                 this.addProcessToReadyList(process)
+                found = true
+
+                this.addNewLogLine({
+                    blockName: "LOOKING INTO SCHEDULE LIST",
+                    msg: `Added`
+                })
             }
         }
     }
 
+    // Check if a runningProcess have timedout
     checkRunningProcess() {
-        if(!this.runningProcess)
-            return
+        this.addNewLogBlockName("CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT")
+        if(!this.runningProcess) {
+            this.addNewLogLine({
+                blockName: "CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT",
+                msg: "there isn't any process running now. Jumping"
+            })
 
-        if(this.runningProcess.timeAtCPU == this.runningProcess.finishAfter)
+            return
+        } 
+
+        if(this.runningProcess.timeAtCPU == this.runningProcess.finishAfter) {
+            this.addNewLogLine({
+                blockName: "CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT",
+                msg: `process with PID ${this.runningProcess.timeAtCPU} finished.
+                Removing from CPU`
+            })
+
             this.runningProcess = null
+            return
+        }
+
+        this.addNewLogLine({
+            blockName: "CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT",
+            msg: `process with PID ${this.runningProcess.timeAtCPU} still executing.`
+        })
     }
 
     chooseProcess = (indice) => {
@@ -93,22 +188,40 @@ class Status {
             // Check if have any scheduled process to be added in ready list
             this.checkScheduleList()
 
-            this.algorithm({
+            this.addNewLogLine({
+                blockName: "EXECUTING SCHEDULE ALGORITHM",
+                msg: "starting now"
+            })
+            const algorithmMsgLog = this.algorithm({
                 readyList: this.readyList,
                 runningProcess: this.runningProcess,
                 chooseProcess: this.chooseProcess
             })
-
+            this.appendLogMsg("EXECUTING SCHEDULE ALGORITHM", algorithmMsgLog)
+            
 
 
             // ========================== Final section
+            this.addNewLogLine({
+                blockName: "FINISHING TICK",
+                msg: "Increments by one the uptime"
+            })
+
             // Increments currentTime by 1
             this.currentTime++
+
+            this.addNewLogLine({
+                blockName: "FINISHING TICK",
+                msg: "Increments by one the running process time at cpu"
+            })
 
             // If exists a process running now, increments timeAtCPU by 1
             if(this.runningProcess) {
                 this.runningProcess.timeAtCPU++
             }
+
+            this.addCurrentLogToLogList()
+
         }, this.unitOfTime / factor)
     }
 

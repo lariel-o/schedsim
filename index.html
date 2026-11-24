@@ -9,6 +9,13 @@
 </head>
 <body>
     <script type="module">
+        import { pseudoKernelStatus } from './backend/control/main.js'
+        import { Process } from './backend/process/main.js'
+
+        pseudoKernelStatus.startSimulator()
+        pseudoKernelStatus.scheduleProcess(new Process(0, 4, null, null))
+        pseudoKernelStatus.scheduleProcess(new Process(3, 2, null, null))
+        pseudoKernelStatus.scheduleProcess(new Process(6, 10, null, null))
     </script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 import FIFO from "./FIFO.js"
 
-const avaliableAlgorithms = {
+const avaiableAlgorithms = {
     "FIFO": FIFO,
 }
 
-export { avaliableAlgorithms }
+export { avaiableAlgorithms }
 

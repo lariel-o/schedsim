@@ -7,17 +7,6 @@
     <link rel="stylesheet" href="frontend/style.css">
 </head>
 <body>
-<<<<<<< HEAD
-    <script type="module">
-        import { pseudoKernelStatus } from './backend/control/main.js'
-        import { Process } from './backend/process/main.js'
-
-        pseudoKernelStatus.startSimulator()
-        pseudoKernelStatus.scheduleProcess(new Process(0, 4, null, null))
-        pseudoKernelStatus.scheduleProcess(new Process(3, 2, null, null))
-        pseudoKernelStatus.scheduleProcess(new Process(6, 10, null, null))
-    </script>
-=======
     <div class="container">
         <div class="screen active" id="start-screen">
             <h1>Schedsim</h1>
@@ -53,7 +42,14 @@
             <button id="process-btn">Continuar</button>
         </div>
     </div>
-    <script src="frontend/script.js"></script>
->>>>>>> b980c0f (Páginas iniciais)
+    <script src="frontend/script.js" type="module">
+        import { pseudoKernelStatus } from './backend/control/main.js'
+        import { Process } from './backend/process/main.js'
+
+        pseudoKernelStatus.startSimulator()
+        pseudoKernelStatus.scheduleProcess(new Process(0, 4, null, null))
+        pseudoKernelStatus.scheduleProcess(new Process(3, 2, null, null))
+        pseudoKernelStatus.scheduleProcess(new Process(6, 10, null, null))
+    </script>
 </body>
 </html>

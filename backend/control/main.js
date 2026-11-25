@@ -1,4 +1,5 @@
 import { avaiableAlgorithms } from "../algorithms/main.js"
+import logs from './logs/logs.js'
 
 // Represents the Status of the pseudo-kernel
 class Status {
@@ -17,7 +18,6 @@ class Status {
     // Scheduled list save process that are waiting to go to CPU
     scheduledList = []
 
-    logs                = []
     currentLog          = []
 
     tickerPointer
@@ -29,67 +29,60 @@ class Status {
             this.unitOfTime = unitOfTime
     }
 
+
     // ================= Methods that deal with logs
-    // Put currentLog in logs list
-    addCurrentLogToLogList() {
-        this.logs.push(this.currentLog)
+    clearCurrentLog() { this.currentLog = [] }
 
-        this.currentLog = []
+    addToCurrentLog(logArr) {
+        if (this.currentLog.length === 0) {
+            this.currentLog.push([...logArr])
+            return
+        }
+
+        const lastIndice = this.currentLog.length - 1
+        const lastLog = this.currentLog[lastIndice]
+
+        if (lastLog[0] === logArr[0]) {
+            if (logArr.length > 1) {
+                lastLog.push(logArr[1])
+            }
+            return
+        }
+
+        this.currentLog.push([...logArr])
     }
 
-    // Add a new line to currentLog
-    addNewLogLine(obj) {
-        let found = false
-        for(let i in this.currentLog) {
-            if(this.currentLog[i][0] == obj.blockName) {
-                found = true
-                this.currentLog[i].push(obj.msg)
-                break;
+    printPrettyLog() {
+        let blockString = ""
+
+        for(let i of this.currentLog) {
+            for(let j in i) {
+                if(j == 0)
+                    blockString += `[${i[0]}]\n`
+
+                else {
+                    blockString += `    > ${i[j]}\n`
+                }
             }
         }
 
-        if(!found) {
-            this.currentLog.push([obj.blockName])
-            this.currentLog[this.currentLog.length - 1].push(obj.msg)
-        }
+        console.log("\n========= ============")
+        console.log(blockString)
+        this.clearCurrentLog()
     }
 
-    appendLogMsg(blockName, msgArray) {
-        for(let i in this.currentLog) {
-            if(this.currentLog[i][0] == blockName) {
-                this.currentLog[i] = this.currentLog[i].concat(msgArray)
-                break;
-            }
-        }
-    }
-
-    addNewLogBlockName(name) {
-        // search if the block already exists
-        for(let i in this.currentLog) {
-            if(this.currentLog[i][0] == name) {
-                return
-            }
-        }
-
-        // If not found, add the blockName
-        this.currentLog.push([name])
-    }
 
     // ================= Methods that deal with process
-    
     // Add a process to the end of the ready list
     addProcessToReadyList(process){ this.readyList.push(process) }
 
     changeAlgorithm(algorithmName) {
         if(!avaiableAlgorithms[algorithmName]) {
-            this.addNewLogLine({
-                blockName: "ERROR CHOOSING ALGORITHM!!!!!!",
-                msg: "Provided name doesen't exists"
-            })
+            this.addToCurrentLog(logs["#2"][0])
 
             return
         }
-        
+
         this.algorithm = avaiableAlgorithms[algorithmName]
     }
 
@@ -101,63 +94,39 @@ class Status {
 
     // Check if have any process in scheduled list to be added in ready list. If have, do it
     checkScheduleList() {
-        this.addNewLogLine({
-            blockName: "LOOKING INTO SCHEDULE LIST",
-            msg: "looking for a process waiting to join readyList"
-        })
+        this.addToCurrentLog(logs["#3"][0])
 
         for(let i = 0; i < this.scheduledList.length; i++) {
             const seeing = this.scheduledList[i]
             if(seeing.startsAt == this.currentTime) {
-                this.addNewLogLine({
-                    blockName: "LOOKING INTO SCHEDULE LIST",
-                    msg: `FOUND! Process with PID ${seeing.PID} wants to join ready list`
-                })
-
-                this.addNewLogLine({
-                    blockName: "LOOKING INTO SCHEDULE LIST",
-                    msg: `Adding process with PID ${seeing.PID} to ready list`
-                })
+                this.addToCurrentLog(logs["#3"][1])
+                this.addToCurrentLog(logs["#3"][2])
 
                 const process = this.scheduledList.splice(i, 1)[0]
                 this.addProcessToReadyList(process)
                 i--
 
-                this.addNewLogLine({
-                    blockName: "LOOKING INTO SCHEDULE LIST",
-                    msg: `Added`
-                })
+                this.addToCurrentLog(logs["#3"][3])
             }
         }
     }
 
     // Check if a runningProcess have timedout
     checkRunningProcess() {
-        this.addNewLogBlockName("CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT")
         if(!this.runningProcess) {
-            this.addNewLogLine({
-                blockName: "CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT",
-                msg: "there isn't any process running now. Jumping"
-            })
+            this.addToCurrentLog(logs["#4"][1])
 
             return
         } 
 
         if(this.runningProcess.timeAtCPU == this.runningProcess.finishAfter) {
-            this.addNewLogLine({
-                blockName: "CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT",
-                msg: `process with PID ${this.runningProcess.timeAtCPU} finished.
-                Removing from CPU`
-            })
+            this.addToCurrentLog(logs["#4"][0])
 
             this.runningProcess = null
             return
         }
 
-        this.addNewLogLine({
-            blockName: "CHECKING IF A RUNNING PROCESS HAVE TIMEDOUT",
-            msg: `process with PID ${this.runningProcess.timeAtCPU} still executing.`
-        })
+        this.addToCurrentLog(logs["#4"][2])
     }
 
     chooseProcess = (indice) => {
@@ -187,39 +156,27 @@ class Status {
             // Check if have any scheduled process to be added in ready list
             this.checkScheduleList()
 
-            this.addNewLogLine({
-                blockName: "EXECUTING SCHEDULE ALGORITHM",
-                msg: "starting now"
-            })
-
+            this.addToCurrentLog(logs["#5"][0])
             const algorithmMsgLog = this.algorithm({
                 readyList: this.readyList,
                 runningProcess: this.runningProcess,
                 chooseProcess: this.chooseProcess
             })
-            this.appendLogMsg("EXECUTING SCHEDULE ALGORITHM", algorithmMsgLog)
-
+            this.addToCurrentLog(logs["#5"][1])
 
             // ========================== Final section
-            this.addNewLogLine({
-                blockName: "FINISHING TICK",
-                msg: "Increments by one the uptime"
-            })
-
             // Increments currentTime by 1
+            this.addToCurrentLog(logs["#6"][0])
             this.currentTime++
-
-            this.addNewLogLine({
-                blockName: "FINISHING TICK",
-                msg: "Increments by one the running process time at cpu"
-            })
 
             // If exists a process running now, increments timeAtCPU by 1
             if(this.runningProcess) {
+                this.addToCurrentLog(logs["#6"][1])
                 this.runningProcess.timeAtCPU++
             }
 
-            this.addCurrentLogToLogList()
+            this.clearCurrentLog()
+            // this.addCurrentLogToLogList()
 
         }, this.unitOfTime / factor)
     }

@@ -170,7 +170,6 @@ class Status {
 
         // Start the new ticker
         this.tickerPointer = setInterval(()=>{
-            console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
             // ========================== Overload section
             if(this.runningOverload > 0) {
                 this.addToCurrentLog(logs["#8"][1])
@@ -184,7 +183,6 @@ class Status {
                 this.currentTime++
 
                 this.clearCurrentLog()
-                console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
                 return
             }
 
@@ -211,7 +209,6 @@ class Status {
                     this.currentTime++
 
                     this.clearCurrentLog()
-                    console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
                     return
                 }
 
@@ -224,7 +221,6 @@ class Status {
                     this.currentTime++
 
                     this.clearCurrentLog()
-                    console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
                     return
                 }
             }
@@ -262,7 +258,6 @@ class Status {
             this.clearCurrentLog()
             // this.addCurrentLogToLogList()
 
-            console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
         }, this.unitOfTime / factor)
     }
 

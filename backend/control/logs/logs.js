@@ -36,6 +36,12 @@ const logs = {
     "#7": {
         0: ["CHECKING QUANTUM PREEMPTION", "Quantum reached, calling schedule algorithm to preempt"],
         1: ["CHECKING QUANTUM PREEMPTION", "Quantum enabled, incrementing runningQuantum"],
+    },
+
+    "#8": {
+        0: ["CHECKING CONTEXT SWITCH OVERLOAD", "Quantum expired, starting context switch overload"],
+        1: ["CHECKING CONTEXT SWITCH OVERLOAD", "Simulator is in context switch overload, skipping execution"],
+        2: ["CHECKING CONTEXT SWITCH OVERLOAD", "Process finished before quantum, starting context switch overload"],
     }
 
 

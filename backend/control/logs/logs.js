@@ -31,10 +31,14 @@ const logs = {
     "#6": {
         0: ["FINISHING TICK", "Increments by one the uptime"],
         1: ["FINISHING TICK", "Increments by one the current running process uptime"],
+    },
+
+    "#7": {
+        0: ["CHECKING QUANTUM PREEMPTION", "Quantum reached, calling schedule algorithm to preempt"],
+        1: ["CHECKING QUANTUM PREEMPTION", "Quantum enabled, incrementing runningQuantum"],
     }
 
 
 }
 
 export default logs
-

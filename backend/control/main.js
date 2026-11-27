@@ -11,6 +11,9 @@ class Status {
     quantum             = 0
     runningQuantum      = 0
 
+    overload            = 0
+    runningOverload     = 0
+
     // Fifo is the default algorithm in the simulator.
     avaiableAlgorithms      = avaiableAlgorithms
     algorithm               = this.avaiableAlgorithms["FIFO"]
@@ -95,6 +98,12 @@ class Status {
         this.runningQuantum = 0
     }
 
+    // Set context switch overload duration in ticks before starting simulation
+    setOverload(overload) {
+        this.overload = overload
+        this.runningOverload = 0
+    }
+
     // Remove the process at the given indice from ready list
     removeProcessFromReadyList(indice) { this.readyList.splice(indice, 1) }
 
@@ -162,6 +171,23 @@ class Status {
         // Start the new ticker
         this.tickerPointer = setInterval(()=>{
             console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
+            // ========================== Overload section
+            if(this.runningOverload > 0) {
+                this.addToCurrentLog(logs["#8"][1])
+                this.runningOverload--
+
+                // Keep checking scheduled processes even during overload
+                this.checkScheduleList()
+
+                // Increments currentTime by 1
+                this.addToCurrentLog(logs["#6"][0])
+                this.currentTime++
+
+                this.clearCurrentLog()
+                console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
+                return
+            }
+
             // ========================== Start section
             // Check if a running process have timedout
             const processFinished = this.checkRunningProcess()
@@ -169,9 +195,42 @@ class Status {
             // Check if have any scheduled process to be added in ready list
             this.checkScheduleList()
 
-            const quantumReached = this.runningQuantum === this.quantum
-            if(processFinished || quantumReached || this.runningQuantum === 0) {
-                if(quantumReached && this.quantum > 0) {
+            const quantumReached = this.quantum > 0 && this.runningQuantum === this.quantum
+
+            if(quantumReached)
+                this.runningQuantum = 0
+
+            // Check if context switch overload should start
+            if(this.quantum > 0 && this.overload > 0) {
+                if(quantumReached && !processFinished) {
+                    this.addToCurrentLog(logs["#8"][0])
+                    this.runningOverload = this.overload - 1
+
+                    // Increments currentTime by 1
+                    this.addToCurrentLog(logs["#6"][0])
+                    this.currentTime++
+
+                    this.clearCurrentLog()
+                    console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
+                    return
+                }
+
+                if(processFinished && !quantumReached) {
+                    this.addToCurrentLog(logs["#8"][2])
+                    this.runningOverload = this.overload - 1
+
+                    // Increments currentTime by 1
+                    this.addToCurrentLog(logs["#6"][0])
+                    this.currentTime++
+
+                    this.clearCurrentLog()
+                    console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
+                    return
+                }
+            }
+
+            if(processFinished || quantumReached || !this.runningProcess || this.runningQuantum === 0) {
+                if(quantumReached) {
                     this.addToCurrentLog(logs["#7"][0])
                 }
 
@@ -183,9 +242,6 @@ class Status {
                 })
                 this.addToCurrentLog(logs["#5"][1])
             }
-
-            if(quantumReached)
-                this.runningQuantum = 0
 
             // ========================== Final section
             // If exists a process running now, increments timeAtCPU by 1

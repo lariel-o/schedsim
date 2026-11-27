@@ -8,6 +8,9 @@ class Status {
 
     runningProcess      = null
 
+    quantum             = 0
+    runningQuantum      = 0
+
     // Fifo is the default algorithm in the simulator.
     avaiableAlgorithms      = avaiableAlgorithms
     algorithm               = this.avaiableAlgorithms["FIFO"]
@@ -86,6 +89,12 @@ class Status {
         this.algorithm = avaiableAlgorithms[algorithmName]
     }
 
+    // Set quantum value before starting simulation
+    setQuantum(quantum) {
+        this.quantum = quantum
+        this.runningQuantum = 0
+    }
+
     // Remove the process at the given indice from ready list
     removeProcessFromReadyList(indice) { this.readyList.splice(indice, 1) }
 
@@ -116,29 +125,32 @@ class Status {
         if(!this.runningProcess) {
             this.addToCurrentLog(logs["#4"][1])
 
-            return
+            return false
         } 
 
         if(this.runningProcess.timeAtCPU == this.runningProcess.finishAfter) {
             this.addToCurrentLog(logs["#4"][0])
 
             this.runningProcess = null
-            return
+
+            return true
         }
 
         this.addToCurrentLog(logs["#4"][2])
+        return false
     }
 
     chooseProcess = (indice) => {
+        if(indice < 0 || indice >= this.readyList.length)
+            return
+
         const sendToRunningProcess = this.readyList.splice(indice, 1)[0]
         const currentRunningProcess = this.runningProcess
 
         if(currentRunningProcess)
             this.addProcessToReadyList(currentRunningProcess)
 
-        this.sendToRunningProcess = null
-        if(sendToRunningProcess)
-            this.runningProcess = sendToRunningProcess
+        this.runningProcess = sendToRunningProcess
     }
     // ================= Methods that deal with simulator execution
 
@@ -149,35 +161,52 @@ class Status {
 
         // Start the new ticker
         this.tickerPointer = setInterval(()=>{
+            console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
             // ========================== Start section
             // Check if a running process have timedout
-            this.checkRunningProcess()
+            const processFinished = this.checkRunningProcess()
 
             // Check if have any scheduled process to be added in ready list
             this.checkScheduleList()
 
-            this.addToCurrentLog(logs["#5"][0])
-            const algorithmMsgLog = this.algorithm({
-                readyList: this.readyList,
-                runningProcess: this.runningProcess,
-                chooseProcess: this.chooseProcess
-            })
-            this.addToCurrentLog(logs["#5"][1])
+            const quantumReached = this.runningQuantum === this.quantum
+            if(processFinished || quantumReached || this.runningQuantum === 0) {
+                if(quantumReached && this.quantum > 0) {
+                    this.addToCurrentLog(logs["#7"][0])
+                }
+
+                this.addToCurrentLog(logs["#5"][0])
+                this.algorithm({
+                    readyList: this.readyList,
+                    runningProcess: this.runningProcess,
+                    chooseProcess: this.chooseProcess
+                })
+                this.addToCurrentLog(logs["#5"][1])
+            }
+
+            if(quantumReached)
+                this.runningQuantum = 0
 
             // ========================== Final section
-            // Increments currentTime by 1
-            this.addToCurrentLog(logs["#6"][0])
-            this.currentTime++
-
             // If exists a process running now, increments timeAtCPU by 1
             if(this.runningProcess) {
                 this.addToCurrentLog(logs["#6"][1])
                 this.runningProcess.timeAtCPU++
+
+                if(this.quantum > 0) {
+                    this.addToCurrentLog(logs["#7"][1])
+                    this.runningQuantum++
+                }
             }
+
+            // Increments currentTime by 1
+            this.addToCurrentLog(logs["#6"][0])
+            this.currentTime++
 
             this.clearCurrentLog()
             // this.addCurrentLogToLogList()
 
+            console.log([...this.readyList], [...this.scheduledList], this.currentTime, this.runningProcess)
         }, this.unitOfTime / factor)
     }
 
@@ -200,5 +229,3 @@ class Status {
 const pseudoKernelStatus = new Status()
 
 export { pseudoKernelStatus }
-
-

@@ -42,6 +42,7 @@ const logs = {
         0: ["CHECKING CONTEXT SWITCH OVERLOAD", "Quantum expired, starting context switch overload"],
         1: ["CHECKING CONTEXT SWITCH OVERLOAD", "Simulator is in context switch overload, skipping execution"],
         2: ["CHECKING CONTEXT SWITCH OVERLOAD", "Process finished before quantum, starting context switch overload"],
+        3: ["CHECKING CONTEXT SWITCH OVERLOAD", "Process preempted by algorithm, starting context switch overload"],
     }
 
 

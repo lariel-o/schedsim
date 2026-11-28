@@ -14,6 +14,9 @@ class Status {
     overload            = 0
     runningOverload     = 0
 
+    pendingQuantumPreemption    = false
+    preemptedDuringTick         = false
+
     // Fifo is the default algorithm in the simulator.
     avaiableAlgorithms      = avaiableAlgorithms
     algorithm               = this.avaiableAlgorithms["FIFO"]
@@ -96,12 +99,14 @@ class Status {
     setQuantum(quantum) {
         this.quantum = quantum
         this.runningQuantum = 0
+        this.pendingQuantumPreemption = false
     }
 
     // Set context switch overload duration in ticks before starting simulation
     setOverload(overload) {
         this.overload = overload
         this.runningOverload = 0
+        this.preemptedDuringTick = false
     }
 
     // Remove the process at the given indice from ready list
@@ -156,8 +161,10 @@ class Status {
         const sendToRunningProcess = this.readyList.splice(indice, 1)[0]
         const currentRunningProcess = this.runningProcess
 
-        if(currentRunningProcess)
+        if(currentRunningProcess) {
             this.addProcessToReadyList(currentRunningProcess)
+            this.preemptedDuringTick = true
+        }
 
         this.runningProcess = sendToRunningProcess
     }
@@ -195,10 +202,12 @@ class Status {
 
             const quantumReached = this.quantum > 0 && this.runningQuantum === this.quantum
 
-            if(quantumReached)
+            if(quantumReached) {
                 this.runningQuantum = 0
+                this.pendingQuantumPreemption = true
+            }
 
-            // Check if context switch overload should start
+            // Check if context switch overload should start due to quantum expiration or early finish
             if(this.quantum > 0 && this.overload > 0) {
                 if(quantumReached && !processFinished) {
                     this.addToCurrentLog(logs["#8"][0])
@@ -225,18 +234,39 @@ class Status {
                 }
             }
 
-            if(processFinished || quantumReached || !this.runningProcess || this.runningQuantum === 0) {
-                if(quantumReached) {
-                    this.addToCurrentLog(logs["#7"][0])
-                }
+            // ========================== Algorithm section
+            // Always invoke the scheduling algorithm on active ticks
+            const isQuantumPreemption = this.pendingQuantumPreemption
+            this.pendingQuantumPreemption = false
+            this.preemptedDuringTick = false
 
-                this.addToCurrentLog(logs["#5"][0])
-                this.algorithm({
-                    readyList: this.readyList,
-                    runningProcess: this.runningProcess,
-                    chooseProcess: this.chooseProcess
-                })
-                this.addToCurrentLog(logs["#5"][1])
+            if(isQuantumPreemption) {
+                this.addToCurrentLog(logs["#7"][0])
+            }
+
+            this.addToCurrentLog(logs["#5"][0])
+            this.algorithm({
+                readyList: this.readyList,
+                runningProcess: this.runningProcess,
+                chooseProcess: this.chooseProcess,
+                quantum: this.quantum,
+                runningQuantum: this.runningQuantum,
+                quantumReached: isQuantumPreemption,
+                currentTime: this.currentTime
+            })
+            this.addToCurrentLog(logs["#5"][1])
+
+            // Trigger overload if the algorithm preempted an active process outside a quantum expiration
+            if(this.overload > 0 && this.preemptedDuringTick && !isQuantumPreemption) {
+                this.addToCurrentLog(logs["#8"][3])
+                this.runningOverload = this.overload - 1
+
+                // Increments currentTime by 1
+                this.addToCurrentLog(logs["#6"][0])
+                this.currentTime++
+
+                this.clearCurrentLog()
+                return
             }
 
             // ========================== Final section
@@ -255,9 +285,8 @@ class Status {
             this.addToCurrentLog(logs["#6"][0])
             this.currentTime++
 
-            this.clearCurrentLog()
-            // this.addCurrentLogToLogList()
-
+            this.printPrettyLog()
+            // this.clearCurrentLog()
         }, this.unitOfTime / factor)
     }
 
